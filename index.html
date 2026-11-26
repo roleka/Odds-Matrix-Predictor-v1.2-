@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="ODDS MATRIX PREDICTOR — a mobile-ready football score prediction prototype.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Odds Matrix Predictor</title>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">OM</div>
+    <div><h1>Odds Matrix Predictor</h1><div class="sub">Ridge matrix · single-score prediction · v1.2</div></div>
+  </div>
+  <div class="header-tag">14 INPUTS</div>
+</header>
+
+<main>
+  <section class="card">
+    <div class="section-heading"><div><h2>Match details</h2><p class="small">Enter one fixture at a time.</p></div><span class="pill">ONE MATCH</span></div>
+    <div class="row">
+      <div><label for="homeTeam">Home team</label><input id="homeTeam" type="text" placeholder="e.g. VIL"></div>
+      <div><label for="awayTeam">Away team</label><input id="awayTeam" type="text" placeholder="e.g. RCD"></div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="predictBtn">Predict score</button>
+      <button class="ghost" id="clearBtn">Clear inputs</button>
+    </div>
+    <p id="inputStatus" class="small status">All 14 team-goal odds are required. Use decimal odds as displayed.</p>
+  </section>
+
+  <section class="card">
+    <div class="section-heading"><div><h2>Read odds from screenshot</h2><p class="small">Take ONE screenshot of the page showing <b>Home Team O/U</b> and <b>Away Team O/U</b>. The app reads it and fills all 14 inputs.</p></div><span class="pill">OCR</span></div>
+    <div class="row" style="align-items:end">
+      <div><label for="ocrFiles">Screenshot(s)</label><input id="ocrFiles" type="file" accept="image/*" multiple style="width:100%;color:var(--muted)"></div>
+      <button class="primary" id="runOcrBtn" style="flex:0 0 auto">Read screenshot</button>
+    </div>
+    <p id="ocrStatus" class="small status">Needs internet the first time, to download the OCR engine.</p>
+    <div id="ocrReport" class="small ocr-report"></div>
+    <details class="market"><summary>Raw OCR text</summary><div class="marketbody">
+      <textarea id="ocrText" rows="6" readonly></textarea>
+      <div class="actions"><button id="copyOcrBtn">Copy OCR text</button></div>
+    </div></details>
+  </section>
+
+  <section class="card">
+    <div class="section-heading"><div><h2>Market odds input</h2><p class="small">The model uses only these 14 markets. Other screenshot markets are not model inputs.</p></div><button class="mini ghost" id="demoBtn">Demo</button></div>
+    <div id="marketGroups"></div>
+  </section>
+
+  <section class="card result" id="resultCard" aria-live="polite">
+    <div class="section-heading"><h2>Prediction</h2><span class="pill green">MODEL OUTPUT</span></div>
+    <div id="fixtureName" class="muted centered"></div>
+    <div id="score" class="score">—</div>
+    <div class="centered outcome" id="scoreLabel">Most likely scoreline</div>
+    <div class="metrics">
+      <div class="metric"><span class="small">Expected home goals</span><b id="homeLambda">—</b></div>
+      <div class="metric"><span class="small">Expected away goals</span><b id="awayLambda">—</b></div>
+      <div class="metric"><span class="small">Top score probability</span><b id="topProb">—</b></div>
+      <div class="metric"><span class="small">Inputs supplied</span><b id="inputCount">—</b></div>
+    </div>
+    <div class="notice" id="modelNote"></div>
+    <div class="actions">
+      <button class="primary" id="saveBtn">Save prediction</button>
+      <button id="exportBtn">Export history CSV</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-heading"><div><h2>Prediction history</h2><p class="small">Stored only in this browser on this device.</p></div><button class="mini ghost" id="clearHistoryBtn">Clear</button></div>
+    <div class="metrics">
+      <div class="metric"><span class="small">Predictions saved</span><b id="historyCount">0</b></div>
+      <div class="metric"><span class="small">Exact score hits</span><b id="exactHits">0</b></div>
+    </div>
+    <div id="historyList" class="history-list small">No saved predictions yet.</div>
+  </section>
+
+  <section class="card">
+    <h2>Model information</h2>
+    <div class="small">
+      <p><b>Stage 1:</b> 14 decimal-odds inputs feed a two-output Ridge Regression model to estimate home and away goals.</p>
+      <p><b>Stage 2:</b> Independent Poisson distributions convert those estimates into a scoreline grid from 0–0 to 8–8. The app displays only the single highest-probability score.</p>
+      <p><b>Training base:</b> 26 historical matches. Ridge penalty α = 70.7946. This is a small experimental sample, not a validated or calibrated betting model.</p>
+      <p><b>Important:</b> Do not interpret the top score probability as a reliable real-world chance. Validate on new matches before relying on the model.</p>
+    </div>
+  </section>
+  <footer class="small centered">Local calculation · No account required · GitHub Pages ready</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="./ocr.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

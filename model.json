@@ -1,0 +1,117 @@
+{
+  "version": "1.0",
+  "model_name": "ODDS MATRIX PREDICTOR",
+  "alpha": 70.79457843841388,
+  "features": [
+    {
+      "key": "H_O05",
+      "group": "Home team goals",
+      "label": "Over 0.5"
+    },
+    {
+      "key": "H_U05",
+      "group": "Home team goals",
+      "label": "Under 0.5"
+    },
+    {
+      "key": "H_O15",
+      "group": "Home team goals",
+      "label": "Over 1.5"
+    },
+    {
+      "key": "H_U15",
+      "group": "Home team goals",
+      "label": "Under 1.5"
+    },
+    {
+      "key": "H_O25",
+      "group": "Home team goals",
+      "label": "Over 2.5"
+    },
+    {
+      "key": "H_U25",
+      "group": "Home team goals",
+      "label": "Under 2.5"
+    },
+    {
+      "key": "H_O35",
+      "group": "Home team goals",
+      "label": "Over 3.5"
+    },
+    {
+      "key": "A_O05",
+      "group": "Away team goals",
+      "label": "Over 0.5"
+    },
+    {
+      "key": "A_U05",
+      "group": "Away team goals",
+      "label": "Under 0.5"
+    },
+    {
+      "key": "A_O15",
+      "group": "Away team goals",
+      "label": "Over 1.5"
+    },
+    {
+      "key": "A_U15",
+      "group": "Away team goals",
+      "label": "Under 1.5"
+    },
+    {
+      "key": "A_O25",
+      "group": "Away team goals",
+      "label": "Over 2.5"
+    },
+    {
+      "key": "A_U25",
+      "group": "Away team goals",
+      "label": "Under 2.5"
+    },
+    {
+      "key": "A_O35",
+      "group": "Away team goals",
+      "label": "Over 3.5"
+    }
+  ],
+  "intercepts": {
+    "home": 1.701466614708757,
+    "away": 0.6439018814368584
+  },
+  "coefficients": {
+    "home": [
+      -0.08818229519379178,
+      -0.007569578463983402,
+      -0.003235958010049264,
+      -0.02829223020716512,
+      -0.001442118766582788,
+      -0.04770302804155243,
+      0.001564986616015501,
+      0.3381245700577187,
+      -0.03299696125155497,
+      0.07573102071505465,
+      -0.1130233569725336,
+      0.02270525804347677,
+      -0.3253600362374928,
+      0.01210427976733901
+    ],
+    "away": [
+      -0.5700111926209569,
+      0.0341369462468761,
+      -0.1327865035550264,
+      0.122090306376536,
+      -0.0388231086678734,
+      0.3504714959278705,
+      -0.01530655091804888,
+      -0.3950660548456965,
+      0.1005603160527625,
+      -0.07519239665118105,
+      0.3724639183197849,
+      -0.02123829748703071,
+      1.09106881833428,
+      -0.01680763227629423
+    ]
+  },
+  "training_matches": 26,
+  "training_note": "Experimental Ridge model trained on 26 historical matches. Not calibrated for betting use."
+}

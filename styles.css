@@ -1,0 +1,32 @@
+*{box-sizing:border-box}
+:root{color-scheme:dark;--bg:#0b1220;--panel:#131e30;--panel2:#1b2940;--line:#2b3a52;--txt:#eef4ff;--muted:#9aabc3;--green:#36c78a;--amber:#f3bd58;--red:#ff7777}
+body{margin:0;background:linear-gradient(160deg,#0c1525,#101a2b 55%,#0b1220);color:var(--txt);font:15px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{padding:17px 18px;border-bottom:1px solid var(--line);background:#101827;position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#27b77e,#146a59);display:grid;place-items:center;font-weight:900;font-size:18px}
+h1{font-size:18px;margin:0}.sub{color:var(--muted);font-size:12px;margin-top:3px}.header-tag,.pill{border:1px solid #315344;background:#173b32;color:#a8f0d0;border-radius:99px;padding:6px 9px;font-size:10px;font-weight:800;white-space:nowrap;letter-spacing:.4px}
+main{max-width:850px;margin:auto;padding:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:15px;margin:0 0 14px;box-shadow:0 8px 24px #0002}
+h2{font-size:16px;margin:0 0 6px}.small{font-size:12px;color:var(--muted);line-height:1.5}.muted{color:var(--muted)}.centered{text-align:center}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section-heading p{margin:3px 0 0}
+.row{display:flex;gap:9px;flex-wrap:wrap}.row>*{flex:1 1 0;min-width:0}
+input,button{font:inherit}input[type=text],input[type=number]{width:100%;background:#0c1626;border:1px solid #34445d;border-radius:10px;padding:11px;color:var(--txt);min-width:0}
+label{font-size:12px;color:var(--muted);display:block;margin:0 0 6px}
+button{border:1px solid #3a4a62;background:#223149;color:var(--txt);padding:11px 13px;border-radius:11px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+button.primary{background:#16845d;border-color:#16845d;color:#fff}button.ghost{background:transparent}button.mini{padding:7px 10px;font-size:12px;flex:0 0 auto}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1 1 0}
+.status{margin:10px 0 0}.error{color:var(--red)}
+.market{border:1px solid var(--line);border-radius:13px;margin:9px 0;overflow:hidden;background:#111b2b}
+.market summary{padding:13px 14px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.market summary::-webkit-details-marker{display:none}.market summary:after{content:"＋";color:var(--green)}.market[open] summary:after{content:"−"}
+.marketbody{padding:0 12px 12px}.fieldgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.field{background:#172439;padding:9px;border-radius:10px}.field label{font-size:11px;min-height:18px}
+.result{display:none}.result.visible{display:block}.score{font-size:52px;font-weight:850;letter-spacing:-2px;text-align:center;color:var(--green);margin:4px 0}
+.outcome{font-size:14px;font-weight:750}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.metric{background:#0e1929;border-radius:12px;padding:12px}.metric b{display:block;font-size:21px;margin-top:3px}
+.notice{padding:11px;border-radius:11px;background:#332a17;color:#f5d99c;font-size:12px;line-height:1.5;margin-top:12px}
+.history-list{margin-top:8px}.history-item{border-top:1px solid var(--line);padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.history-score{font-size:20px;font-weight:850;color:var(--green)}.actual-entry{display:flex;gap:8px;margin-bottom:9px}.actual-entry input{flex:1}
+footer{padding:8px 8px 24px}
+@media(min-width:650px){.fieldgrid{grid-template-columns:repeat(3,minmax(0,1fr))}main{padding:22px}.card{padding:18px}}
+textarea{width:100%;background:#0c1626;border:1px solid #34445d;border-radius:10px;padding:11px;color:var(--txt);font:12px ui-monospace,monospace;resize:vertical}
+.ocr-report{white-space:pre-wrap;margin-top:8px}.ocr-report:empty{display:none}
+button:disabled{opacity:.55}
