@@ -1,5 +1,5 @@
 // Change CACHE on every release so old copies are removed.
-const CACHE="odds-matrix-v1.2";
+const CACHE="odds-matrix-v2.0.1";
 const FILES=["./","./index.html","./styles.css","./app.js","./ocr.js","./model.json","./manifest.webmanifest","./icon.svg"];
 
 self.addEventListener("install",event=>{
