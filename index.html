@@ -14,7 +14,7 @@
 <header>
   <div class="brand">
     <div class="logo">OM</div>
-    <div><h1>Odds Matrix Predictor</h1><div class="sub">Ridge matrix · single-score prediction · v1.2</div></div>
+    <div><h1>Odds Matrix Predictor</h1><div class="sub">PCR matrix · handicap (2:0)/(0:2) · v2.0</div></div>
   </div>
   <div class="header-tag">14 INPUTS</div>
 </header>
@@ -27,7 +27,7 @@
       <div><label for="awayTeam">Away team</label><input id="awayTeam" type="text" placeholder="e.g. RCD"></div>
     </div>
     <div class="actions">
-      <button class="primary" id="predictBtn">Predict score</button>
+      <button class="primary" id="predictBtn">Predict</button>
       <button class="ghost" id="clearBtn">Clear inputs</button>
     </div>
     <p id="inputStatus" class="small status">All 14 team-goal odds are required. Use decimal odds as displayed.</p>
@@ -53,15 +53,17 @@
   </section>
 
   <section class="card result" id="resultCard" aria-live="polite">
-    <div class="section-heading"><h2>Prediction</h2><span class="pill green">MODEL OUTPUT</span></div>
+    <div class="section-heading"><h2>Prediction</h2><span class="pill green">PCR · 1 COMPONENT</span></div>
     <div id="fixtureName" class="muted centered"></div>
-    <div id="score" class="score">—</div>
-    <div class="centered outcome" id="scoreLabel">Most likely scoreline</div>
+    <div id="pick" class="score">—</div>
+    <div class="centered outcome" id="pickTeam">Handicap pick</div>
     <div class="metrics">
-      <div class="metric"><span class="small">Expected home goals</span><b id="homeLambda">—</b></div>
-      <div class="metric"><span class="small">Expected away goals</span><b id="awayLambda">—</b></div>
-      <div class="metric"><span class="small">Top score probability</span><b id="topProb">—</b></div>
-      <div class="metric"><span class="small">Inputs supplied</span><b id="inputCount">—</b></div>
+      <div class="metric"><span class="small">Win chance (handicap)</span><b id="pWin">—</b></div>
+      <div class="metric"><span class="small">Goal gap (home − away)</span><b id="gap">—</b></div>
+      <div class="metric"><span class="small">Predicted home goals</span><b id="homeLambda">—</b></div>
+      <div class="metric"><span class="small">Predicted away goals</span><b id="awayLambda">—</b></div>
+      <div class="metric"><span class="small">Rounded score</span><b id="score">—</b></div>
+      <div class="metric"><span class="small">Inputs supplied</span><b>14 / 14</b></div>
     </div>
     <div class="notice" id="modelNote"></div>
     <div class="actions">
@@ -74,7 +76,7 @@
     <div class="section-heading"><div><h2>Prediction history</h2><p class="small">Stored only in this browser on this device.</p></div><button class="mini ghost" id="clearHistoryBtn">Clear</button></div>
     <div class="metrics">
       <div class="metric"><span class="small">Predictions saved</span><b id="historyCount">0</b></div>
-      <div class="metric"><span class="small">Exact score hits</span><b id="exactHits">0</b></div>
+      <div class="metric"><span class="small">Handicap won / settled</span><b id="hcHits">0</b></div>
     </div>
     <div id="historyList" class="history-list small">No saved predictions yet.</div>
   </section>
@@ -82,10 +84,11 @@
   <section class="card">
     <h2>Model information</h2>
     <div class="small">
-      <p><b>Stage 1:</b> 14 decimal-odds inputs feed a two-output Ridge Regression model to estimate home and away goals.</p>
-      <p><b>Stage 2:</b> Independent Poisson distributions convert those estimates into a scoreline grid from 0–0 to 8–8. The app displays only the single highest-probability score.</p>
-      <p><b>Training base:</b> 26 historical matches. Ridge penalty α = 70.7946. This is a small experimental sample, not a validated or calibrated betting model.</p>
-      <p><b>Important:</b> Do not interpret the top score probability as a reliable real-world chance. Validate on new matches before relying on the model.</p>
+      <p><b>Stage 1 – PCR / SVD:</b> the 14 odds are standardised and compressed onto their first principal component (Z = UΣVᵀ, score t = Z·V₁, 57% of the variation). Goals are regressed on that one score and folded back into one equation on the raw odds: goals = b + A·odds.</p>
+      <p><b>Stage 2 – Handicap pick:</b> the side with more predicted goals gets the 2-goal start: <b>Home (2:0)</b> if home ≥ away, otherwise <b>Away (0:2)</b>. The pick wins unless that side loses by 2 or more.</p>
+      <p><b>Win chance:</b> predicted goals are used as Poisson rates; the app adds up every score (0–10 each side) where the pick wins. This number runs cautious: it averaged about 90% while the picks actually won 97% in testing, so use it to rank matches, not as an exact chance.</p>
+      <p><b>Back-test:</b> 25/26 on the training matches and 18/18 on 18 new matches (43/44). Always picking Home (2:0) won 41/44. Betting every PCR pick at the recorded handicap odds returned +6.5% on the 26 training matches and +8.0% on 7 new matches that had odds.</p>
+      <p><b>Important:</b> trained on 26 matches only. Handicap odds are low (about 1.03–1.35), so one loss cancels several wins. Track results before staking real money.</p>
     </div>
   </section>
   <footer class="small centered">Local calculation · No account required · GitHub Pages ready</footer>
