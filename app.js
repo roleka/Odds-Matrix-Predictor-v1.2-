@@ -68,6 +68,19 @@ function poisson(k, lambda) {
   return p;
 }
 
+// Handicap rule: the side with more predicted goals gets the 2-goal start.
+// Home (2:0) wins if home + 2 > away; Away (0:2) wins if away + 2 > home.
+function handicapPick(predHome, predAway) {
+  return predHome >= predAway ? "Home (2:0)" : "Away (0:2)";
+}
+function handicapWon(pick, h, a) {
+  return pick.startsWith("Home") ? h + 2 > a : a + 2 > h;
+}
+function parseScore(text) {
+  const m = String(text || "").trim().match(/^(\d+)\s*[-:]\s*(\d+)$/);
+  return m ? [+m[1], +m[2]] : null;
+}
+
 function predict() {
   if (!MODEL) return;
   const { vals, missing } = getOdds();
@@ -79,48 +92,52 @@ function predict() {
   $("inputStatus").textContent = "All 14 inputs validated.";
   $("inputStatus").classList.remove("error");
 
+  // PCR (1 component) folded into one linear equation on the raw odds:
+  // goals = intercept + sum(coefficient x odds)
   const x = MODEL.features.map(f => vals[f.key]);
   const rawHome = MODEL.intercepts.home + x.reduce((sum, v, i) => sum + v * MODEL.coefficients.home[i], 0);
   const rawAway = MODEL.intercepts.away + x.reduce((sum, v, i) => sum + v * MODEL.coefficients.away[i], 0);
+  const lambdaHome = Math.max(0.05, rawHome);
+  const lambdaAway = Math.max(0.05, rawAway);
 
-  // A goal rate cannot be negative. Keep the raw regression estimate visible in the note.
-  const lambdaHome = Math.max(0, rawHome);
-  const lambdaAway = Math.max(0, rawAway);
-
-  let best = { home: 0, away: 0, probability: -1 };
-  let gridTotal = 0;
-  for (let h = 0; h <= 8; h++) {
-    for (let a = 0; a <= 8; a++) {
-      const probability = poisson(h, lambdaHome) * poisson(a, lambdaAway);
-      gridTotal += probability;
-      if (probability > best.probability) best = { home: h, away: a, probability };
+  const pick = handicapPick(rawHome, rawAway);
+  const gap = rawHome - rawAway;
+  let pWin = 0, best = { home: 0, away: 0, probability: -1 };
+  for (let h = 0; h <= 10; h++) {
+    for (let a = 0; a <= 10; a++) {
+      const p = poisson(h, lambdaHome) * poisson(a, lambdaAway);
+      if (handicapWon(pick, h, a)) pWin += p;
+      if (p > best.probability) best = { home: h, away: a, probability: p };
     }
   }
+  const rounded = `${Math.max(0, Math.round(rawHome))}-${Math.max(0, Math.round(rawAway))}`;
 
   const homeTeam = $("homeTeam").value.trim() || "Home";
   const awayTeam = $("awayTeam").value.trim() || "Away";
   latestPrediction = {
-    id: Date.now(),
-    date: new Date().toISOString(),
+    id: Date.now(), date: new Date().toISOString(), model: "PCR-1",
     homeTeam, awayTeam,
-    score: `${best.home}-${best.away}`,
-    homeGoals: best.home, awayGoals: best.away,
-    lambdaHome, lambdaAway, rawHome, rawAway,
-    topProbability: best.probability,
-    inputs: vals,
-    actual: ""
+    pick, pickTeam: pick.startsWith("Home") ? homeTeam : awayTeam,
+    pWin, gap,
+    score: rounded, poissonScore: `${best.home}-${best.away}`,
+    lambdaHome: rawHome, lambdaAway: rawAway,
+    inputs: vals, actual: ""
   };
 
   $("fixtureName").textContent = `${homeTeam} vs ${awayTeam}`;
-  $("score").textContent = latestPrediction.score;
-  $("homeLambda").textContent = lambdaHome.toFixed(2);
-  $("awayLambda").textContent = lambdaAway.toFixed(2);
-  $("topProb").textContent = `${(best.probability * 100).toFixed(1)}%`;
-  $("inputCount").textContent = "14 / 14";
-  let note = `Single highest-probability score from the independent-Poisson grid. Raw Ridge estimates: home ${rawHome.toFixed(3)}, away ${rawAway.toFixed(3)}.`;
-  if (rawHome < 0 || rawAway < 0) note += " A negative raw goal estimate was clipped to zero because goal rates cannot be negative.";
-  if (gridTotal < 0.995) note += ` The 0–8 score grid captures ${(gridTotal*100).toFixed(1)}% of the model probability mass; scores above 8 are omitted.`;
-  note += " Probability is experimental and not calibrated.";
+  $("pick").textContent = pick;
+  $("pickTeam").textContent = `Back ${latestPrediction.pickTeam} with a 2-goal start`;
+  $("pWin").textContent = `${(pWin * 100).toFixed(1)}%`;
+  $("gap").textContent = (gap >= 0 ? "+" : "") + gap.toFixed(2);
+  $("homeLambda").textContent = rawHome.toFixed(2);
+  $("awayLambda").textContent = rawAway.toFixed(2);
+  $("score").textContent = rounded;
+
+  let note = `PCR (1 component) predicted goals: home ${rawHome.toFixed(3)}, away ${rawAway.toFixed(3)}. ` +
+    `Win chance is the Poisson probability that the picked side does not lose by 2 or more; it runs cautious (about 90% on average while picks won 97% in testing).`;
+  if (Math.abs(gap) < 0.10) note += " Close call: the model can barely separate the two teams.";
+  if (rawHome < 0.05 || rawAway < 0.05) note += " A goal estimate below 0.05 was raised to 0.05 for the probability step.";
+  note += " Experimental model (26 training matches); not calibrated.";
   $("modelNote").textContent = note;
   $("resultCard").classList.add("visible");
   $("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -148,8 +165,10 @@ function savePrediction() {
 }
 function renderHistory() {
   const items = readHistory();
+  const settled = items.filter(x => x.pick && parseScore(x.actual));
+  const won = settled.filter(x => handicapWon(x.pick, ...parseScore(x.actual)));
   $("historyCount").textContent = items.length;
-  $("exactHits").textContent = items.filter(x => x.actual && x.actual === x.score).length;
+  $("hcHits").textContent = settled.length ? `${won.length} / ${settled.length}` : "0";
   const host = $("historyList");
   host.innerHTML = "";
   if (!items.length) { host.textContent = "No saved predictions yet."; return; }
@@ -161,11 +180,19 @@ function renderHistory() {
     strong.textContent = `${item.homeTeam} vs ${item.awayTeam}`;
     const meta = document.createElement("div");
     meta.className = "small";
-    meta.textContent = `${new Date(item.date).toLocaleString()} · λ ${item.lambdaHome.toFixed(2)}–${item.lambdaAway.toFixed(2)}`;
+    const lh = Number(item.lambdaHome), la = Number(item.lambdaAway);
+    meta.textContent = `${new Date(item.date).toLocaleString()} · goals ${lh.toFixed(2)}–${la.toFixed(2)}` +
+      (item.pWin != null ? ` · win ${(item.pWin*100).toFixed(0)}%` : "");
     left.append(strong, meta);
     const right = document.createElement("div");
     right.className = "history-score";
-    right.textContent = item.score;
+    const sc = parseScore(item.actual);
+    if (item.pick) {
+      right.textContent = item.pick;
+      if (sc) right.classList.add(handicapWon(item.pick, ...sc) ? "won" : "lost");
+    } else {
+      right.textContent = item.score; // older v1 record
+    }
     row.append(left, right);
     const actualWrap = document.createElement("div");
     actualWrap.className = "actual-entry";
@@ -176,11 +203,11 @@ function renderHistory() {
     actual.setAttribute("aria-label", `Actual score for ${item.homeTeam} vs ${item.awayTeam}`);
     const save = document.createElement("button");
     save.className = "mini";
-    save.textContent = "Set result";
+    save.textContent = sc && item.pick ? (handicapWon(item.pick, ...sc) ? "WON ✓" : "LOST ✗") : "Set result";
     save.addEventListener("click", () => {
-      const m = actual.value.trim().match(/^(\d+)\s*[-:]\s*(\d+)$/);
+      const m = parseScore(actual.value);
       if (actual.value.trim() && !m) { actual.focus(); return; }
-      const value = m ? `${+m[1]}-${+m[2]}` : "";
+      const value = m ? `${m[0]}-${m[1]}` : "";
       const updated = readHistory();
       const found = updated.find(x => x.id === item.id);
       if (found) found.actual = value;
@@ -199,15 +226,18 @@ function csvEscape(value) {
 function downloadCsv() {
   const items = readHistory();
   if (!items.length) return alert("There are no saved predictions to export.");
-  const headers = ["date","homeTeam","awayTeam","predictedScore","actualScore","lambdaHome","lambdaAway","topProbability"];
+  const headers = ["date","model","homeTeam","awayTeam","handicapPick","winChance","goalGap","predHomeGoals","predAwayGoals","roundedScore","actualScore","handicapResult"];
   const lines = [headers.join(",")];
-  items.forEach(x => lines.push([
-    x.date,x.homeTeam,x.awayTeam,x.score,x.actual,x.lambdaHome,x.lambdaAway,x.topProbability
-  ].map(csvEscape).join(",")));
+  items.forEach(x => {
+    const sc = parseScore(x.actual);
+    const res = x.pick && sc ? (handicapWon(x.pick, ...sc) ? "WON" : "LOST") : "";
+    lines.push([x.date,x.model||"Ridge v1",x.homeTeam,x.awayTeam,x.pick||"",x.pWin??"",x.gap??"",
+      x.lambdaHome,x.lambdaAway,x.score,x.actual,res].map(csvEscape).join(","));
+  });
   const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = "odds-matrix-prediction-history.csv";
+  a.href = url; a.download = "odds-matrix-handicap-history.csv";
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
@@ -221,11 +251,11 @@ function clearInputs() {
   if ($("ocrReport")) { $("ocrReport").textContent = ""; $("ocrText").value = ""; }
 }
 function fillDemo() {
-  const demo = [1.12,6.37,1.59,2.38,2.78,1.45,5.66,1.48,2.66,3.24,1.35,8.49,1.07,17.14];
+  const demo = [1.15,5.44,1.73,2.11,3.24,1.35,6.94,1.71,2.15,4.46,1.21,12.40,1.03,19.33];
   MODEL.features.forEach((f,i) => $(`odds_${f.key}`).value = demo[i]);
-  $("homeTeam").value = "VIL";
-  $("awayTeam").value = "RCD";
-  $("inputStatus").textContent = "Demo values loaded. These are example inputs, not a live fixture feed.";
+  $("homeTeam").value = "MCI";
+  $("awayTeam").value = "NEW";
+  $("inputStatus").textContent = "Demo loaded: MCI vs NEW (finished 2:1). Example inputs, not a live feed.";
   $("inputStatus").classList.remove("error");
 }
 // Register the service worker immediately (the page "load" event has often
@@ -289,8 +319,8 @@ function fillFromOcr(res) {
   const n = Object.keys(res.inputs).length;
   $("ocrStatus").classList.remove("error");
   $("ocrStatus").textContent = n === MODEL.features.length
-    ? `All ${n} inputs filled${res.teams ? ` for ${res.teams.home} vs ${res.teams.away}` : ""}. Check any repaired values, then tap Predict score.`
-    : `${n} of ${MODEL.features.length} inputs filled. Type the missing ones (see report), then tap Predict score.`;
+    ? `All ${n} inputs filled${res.teams ? ` for ${res.teams.home} vs ${res.teams.away}` : ""}. Check any repaired values, then tap Predict.`
+    : `${n} of ${MODEL.features.length} inputs filled. Type the missing ones (see report), then tap Predict.`;
   latestPrediction = null;
   $("resultCard").classList.remove("visible");
 }
