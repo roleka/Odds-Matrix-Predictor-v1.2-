@@ -30,3 +30,7 @@ footer{padding:8px 8px 24px}
 textarea{width:100%;background:#0c1626;border:1px solid #34445d;border-radius:10px;padding:11px;color:var(--txt);font:12px ui-monospace,monospace;resize:vertical}
 .ocr-report{white-space:pre-wrap;margin-top:8px}.ocr-report:empty{display:none}
 button:disabled{opacity:.55}
+.verdict{margin-top:10px;padding:10px;border-radius:11px;font-size:13px;font-weight:700;text-align:center;background:#0e1929;color:var(--muted)}
+.verdict.good{background:#173b32;color:#a8f0d0}.verdict.bad{background:#3a1d22;color:#ffb3b3}
+.history-score.won{color:var(--green)}.history-score.lost{color:var(--red)}.history-score{font-size:15px;text-align:right}
+#pick.score{font-size:40px;letter-spacing:-1px}
